@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>qml;cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>qrc;rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+    </Filter>
+    <Filter Include="Antlr Grammar">
+      <UniqueIdentifier>{2fecb248-ff55-4d93-a758-5ab3965e82f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Models">
+      <UniqueIdentifier>{fd044b7f-7794-40c9-a61a-5e077a4e0b5b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="DiamondSheets.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+    <QtUic Include="DiamondSheets.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtMoc Include="DiamondSheets.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <ClCompile Include="DiamondSheets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Models\TableModel.cpp">
+      <Filter>Models</Filter>
+    </ClCompile>
+    <ClCompile Include="ExpressionParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AntlrGrammar\DiamondSheetsBaseVisitor.cpp">
+      <Filter>Antlr Grammar</Filter>
+    </ClCompile>
+    <ClCompile Include="AntlrGrammar\DiamondSheetsLexer.cpp">
+      <Filter>Antlr Grammar</Filter>
+    </ClCompile>
+    <ClCompile Include="AntlrGrammar\DiamondSheetsParser.cpp">
+      <Filter>Antlr Grammar</Filter>
+    </ClCompile>
+    <ClCompile Include="AntlrGrammar\DiamondSheetsVisitor.cpp">
+      <Filter>Antlr Grammar</Filter>
+    </ClCompile>
+    <ClCompile Include="FileManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GoogleApi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GoogleDriveApi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Cell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExpressionParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AntlrGrammar\DiamondSheetsVisitor.h">
+      <Filter>Antlr Grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="AntlrGrammar\DiamondSheetsParser.h">
+      <Filter>Antlr Grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="AntlrGrammar\DiamondSheetsLexer.h">
+      <Filter>Antlr Grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="AntlrGrammar\DiamondSheetsBaseVisitor.h">
+      <Filter>Antlr Grammar</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="Models\TableModel.h">
+      <Filter>Models</Filter>
+    </QtMoc>
+    <QtMoc Include="FileManager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="GoogleApi.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="GoogleDriveApi.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+  </ItemGroup>
+</Project>
