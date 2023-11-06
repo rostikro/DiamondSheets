@@ -1,5 +1,6 @@
 ﻿#include "ExpressionParser.h"
 #include <qdebug.h>
+#include "qregularexpression.h"
 
 std::any ExpressionParser::visitNumericAtomExp(DiamondSheetsParser::NumericAtomExpContext* ctx)
 {
@@ -222,6 +223,11 @@ std::any ExpressionParser::visitCellIdAtomExp(DiamondSheetsParser::CellIdAtomExp
 
 	if (value == "НЕПРАВДА")
 		return (double)0;
+
+	for (auto& c : value)
+	{
+		if (!c.isDigit()) return std::any();
+	}
 
 	return std::stod(value.toStdString());
 }
