@@ -109,7 +109,7 @@ void DiamondSheets::closeEvent(QCloseEvent *event)
 
 void DiamondSheets::ShowInfo()
 {
-    QMessageBox::about(this, "Про прогаму", "Diamond Sheets\nВерсія 1.0\n©Romanets Corporation. Всі права захищено.");
+    QMessageBox::about(this, "Про прогаму", "Diamond Sheets\nВерсія 1.0\n©Romanets Inc. Всі права захищено.");
 }
 
 void DiamondSheets::ContextMenuRequested(QPoint pos)
