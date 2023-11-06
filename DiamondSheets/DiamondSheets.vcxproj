@@ -118,7 +118,6 @@
     <ClCompile Include="GoogleDriveApi.cpp" />
     <ClCompile Include="GoogleApi.cpp" />
     <ClCompile Include="Models\TableModel.cpp" />
-    <ClCompile Include="test.cpp" />
     <QtRcc Include="DiamondSheets.qrc" />
     <QtUic Include="DiamondSheets.ui" />
     <QtMoc Include="DiamondSheets.h" />
@@ -132,7 +131,6 @@
     <ClInclude Include="AntlrGrammar\DiamondSheetsVisitor.h" />
     <ClInclude Include="Cell.h" />
     <ClInclude Include="ExpressionParser.h" />
-    <ClInclude Include="test.h" />
     <QtMoc Include="FileManager.h" />
     <QtMoc Include="GoogleApi.h" />
     <QtMoc Include="GoogleDriveApi.h" />
