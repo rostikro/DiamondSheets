@@ -102,7 +102,6 @@ bool FileManager::SaveFile()
 	Q_EMIT Serialize(out);
 	file.close();
 
-
 	edited = false;
 	fileState = SAVED;
 

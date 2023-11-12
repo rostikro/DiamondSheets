@@ -113,6 +113,7 @@
     <ClCompile Include="AntlrGrammar\DiamondSheetsLexer.cpp" />
     <ClCompile Include="AntlrGrammar\DiamondSheetsParser.cpp" />
     <ClCompile Include="AntlrGrammar\DiamondSheetsVisitor.cpp" />
+    <ClCompile Include="Cell.cpp" />
     <ClCompile Include="ExpressionParser.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="GoogleDriveApi.cpp" />
@@ -131,6 +132,7 @@
     <ClInclude Include="AntlrGrammar\DiamondSheetsVisitor.h" />
     <ClInclude Include="Cell.h" />
     <ClInclude Include="ExpressionParser.h" />
+    <ClInclude Include="ParserResult.h" />
     <QtMoc Include="FileManager.h" />
     <QtMoc Include="GoogleApi.h" />
     <QtMoc Include="GoogleDriveApi.h" />

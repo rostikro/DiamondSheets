@@ -25,7 +25,10 @@ private:
     Qt::ItemFlags flags(const QModelIndex& index) const override;
 
     QString To26Base(int index) const;
-    QString EvaluateExpression(QString expression);
+    QString EvaluateExpression(QString expression, Cell* cell, bool isUpdate);
+    void UpdateCell(Cell* cell);
+    void SetREFError(Cell* cell);
+    bool DetectLoop(Cell* cell);
 
 public Q_SLOTS:
     void SetDefault();

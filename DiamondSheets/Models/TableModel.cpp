@@ -5,6 +5,7 @@
 #include "AntlrGrammar/DiamondSheetsParser.h"
 
 #include "ExpressionParser.h"
+#include "ParserResult.h"
 
 TableModel::TableModel(QObject* parent)
     : QAbstractTableModel(parent)
@@ -55,10 +56,32 @@ bool TableModel::setData(const QModelIndex& index, const QVariant& value, int ro
         if (!checkIndex(index))
             return false;
 
+        // Clear all references that this cell refers to
+        for (auto cell : _gridData[index.row()][index.column()].getReferenced())
+        {
+            cell->deleteRef(&_gridData[index.row()][index.column()]);
+        }
+        _gridData[index.row()][index.column()].clearReferenced();
+
         _gridData[index.row()][index.column()].setExpression(value.toString());
         if (value.toString().size() > 0)
             if (value.toString()[0] == '=')
-                _gridData[index.row()][index.column()].setValue(EvaluateExpression(value.toString()));
+                _gridData[index.row()][index.column()].setValue(EvaluateExpression(value.toString(), &_gridData[index.row()][index.column()], false));
+
+        
+        if (DetectLoop(&_gridData[index.row()][index.column()]))
+        {
+            _gridData[index.row()][index.column()].setValue(Cell::refErrorText);
+            SetREFError(&_gridData[index.row()][index.column()]);
+
+            return true;
+        }
+
+        // Update refs
+        for (auto& cell : _gridData[index.row()][index.column()].getRefs())
+        {
+            UpdateCell(cell);
+        }
 
         Q_EMIT EditCompleted();
         return true;
@@ -67,7 +90,35 @@ bool TableModel::setData(const QModelIndex& index, const QVariant& value, int ro
     return false;
 }
 
-QString TableModel::EvaluateExpression(QString expression)
+void TableModel::SetREFError(Cell* cell)
+{
+    for (auto ref : cell->getRefs())
+    {
+        if (ref->getValue() == Cell::refErrorText)
+            return;
+
+        ref->setValue(Cell::refErrorText);
+        SetREFError(ref);
+    }
+}
+
+void TableModel::UpdateCell(Cell* cell)
+{
+    if (DetectLoop(cell))
+        return;
+
+    if (cell->getExpression()[0] == '=')
+        cell->setValue(EvaluateExpression(cell->getExpression(), cell, true));
+
+    auto test = cell->getRefs();
+    // Update refs
+    for (auto& cell : cell->getRefs())
+    {
+        UpdateCell(cell);
+    }
+}
+
+QString TableModel::EvaluateExpression(QString expression, Cell* cell, bool isUpdate)
 {
     expression[0] = ' ';
 
@@ -78,21 +129,46 @@ QString TableModel::EvaluateExpression(QString expression)
     DiamondSheetsParser parser(&tokens);
     DiamondSheetsParser::ExpressionContext* expressionContext = parser.expression();
 
-    ExpressionParser expressionParser(&_gridData);
+    ExpressionParser expressionParser(&_gridData, cell, isUpdate);
 
-    auto exp_any = expressionParser.visit(expressionContext);
+    auto result_any = expressionParser.visit(expressionContext);
+    if (!result_any.has_value())
+        return Cell::errorText;
 
-    if (!exp_any.has_value())
+    auto result = std::any_cast<ParserResult>(result_any);
+
+    if (result.type == 0)
     {
-        return "#ПОМИЛКА";
-    }
-    if (!strcmp(exp_any.type().name(), "bool"))
-    {
-        bool val = std::any_cast<bool>(exp_any);
-        return val ? "ПРАВДА" : "НЕПРАВДА";
+        return result.error;
     }
 
-    return QString::number(std::any_cast<double>(exp_any));
+    if (result.type == 1)
+    {
+        return QString::number(result.value);
+    }
+
+    // type == 2
+    return result.value ? Cell::trueText : Cell::falseText;
+}
+
+bool TableModel::DetectLoop(Cell* cell)
+{
+    cell->visited = 1;
+
+    for (auto ref : cell->getReferenced())
+    {
+        if (ref->visited)
+        {
+            ref->visited = 0;
+            return 1;
+        }
+
+        if (DetectLoop(ref))
+            return 1;
+    }
+
+    cell->visited = 0;
+    return 0;
 }
 
 void TableModel::AddRow(QModelIndex index, int offset)
@@ -133,7 +209,9 @@ void TableModel::DeleteColumn(QModelIndex index)
         return;
 
     for (auto& row : _gridData)
+    {
         row.erase(row.begin() + index.column());
+    }
 
     _columns--;
     Q_EMIT layoutChanged();
@@ -186,13 +264,30 @@ void TableModel::Deserialize(QTextStream& in)
                 }
 
                 QString expression = row.mid(delimiterIndex + 1, i - delimiterIndex - 1);
-                data.push_back(Cell(expression, expression[0] == '=' ? EvaluateExpression(expression) : expression));
+
+                // Cell only with expression
+                data.push_back(Cell(expression, ""));
+
                 delimiterIndex = i;
                 columnIndex++;
             }
         }
         rowIndex++;
         _gridData.push_back(data);
+    }
+
+    // Evaluate all expressions
+    int i = -1;
+    for (auto& row : _gridData)
+    {
+        i++;
+        int j = -1;
+        for (auto& cell : row)
+        {
+            j++;
+            if (cell.getExpression() == nullptr) continue;
+            setData(createIndex(i, j), cell.getExpression());
+        }
     }
 
     _rows = _gridData.size();
