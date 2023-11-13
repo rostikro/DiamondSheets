@@ -165,13 +165,13 @@ std::any ExpressionParser::visitCellIdAtomExp(DiamondSheetsParser::CellIdAtomExp
 		return ParserResult(Cell::refErrorText);
 	}
 
-	QString value = _gridData->operator[](cellId[0])[cellId[1]].getValue();
+	QString value = _gridData->operator[](cellId[0])[cellId[1]]->getValue();
 
 	// If we are not updating cell, than we need to add refs
-	if (!isUpdate && !headCell->isReferenced(&_gridData->operator[](cellId[0])[cellId[1]]))
+	if (!isUpdate && !headCell->isReferenced(_gridData->operator[](cellId[0])[cellId[1]]))
 	{
-		_gridData->operator[](cellId[0])[cellId[1]].addRef(headCell);
-		headCell->addReferenced(&_gridData->operator[](cellId[0])[cellId[1]]);
+		_gridData->operator[](cellId[0])[cellId[1]]->addRef(headCell);
+		headCell->addReferenced(_gridData->operator[](cellId[0])[cellId[1]]);
 	}
 
 	if (value == nullptr)

@@ -28,9 +28,9 @@ QVariant TableModel::data(const QModelIndex& index, int role) const
     if (checkIndex(index))
     {
         if (role == Qt::DisplayRole)
-            return _gridData[index.row()][index.column()].getValue();
+            return _gridData[index.row()][index.column()]->getValue();
         if (role == Qt::EditRole)
-            return _gridData[index.row()][index.column()].getExpression();
+            return _gridData[index.row()][index.column()]->getExpression();
     }
 
     return QVariant();
@@ -57,28 +57,28 @@ bool TableModel::setData(const QModelIndex& index, const QVariant& value, int ro
             return false;
 
         // Clear all references that this cell refers to
-        for (auto cell : _gridData[index.row()][index.column()].getReferenced())
+        for (auto cell : _gridData[index.row()][index.column()]->getReferenced())
         {
-            cell->deleteRef(&_gridData[index.row()][index.column()]);
+            cell->deleteRef(_gridData[index.row()][index.column()]);
         }
-        _gridData[index.row()][index.column()].clearReferenced();
+        _gridData[index.row()][index.column()]->clearReferenced();
 
-        _gridData[index.row()][index.column()].setExpression(value.toString());
+        _gridData[index.row()][index.column()]->setExpression(value.toString());
         if (value.toString().size() > 0)
             if (value.toString()[0] == '=')
-                _gridData[index.row()][index.column()].setValue(EvaluateExpression(value.toString(), &_gridData[index.row()][index.column()], false));
+                _gridData[index.row()][index.column()]->setValue(EvaluateExpression(value.toString(), _gridData[index.row()][index.column()], false));
 
 
-        if (DetectLoop(&_gridData[index.row()][index.column()]))
+        if (DetectLoop(_gridData[index.row()][index.column()]))
         {
-            _gridData[index.row()][index.column()].setValue(Cell::refErrorText);
-            SetREFError(&_gridData[index.row()][index.column()]);
+            _gridData[index.row()][index.column()]->setValue(Cell::refErrorText);
+            SetREFError(_gridData[index.row()][index.column()]);
 
             return true;
         }
 
         // Update refs
-        for (auto& cell : _gridData[index.row()][index.column()].getRefs())
+        for (auto& cell : _gridData[index.row()][index.column()]->getRefs())
         {
             UpdateCell(cell);
         }
@@ -90,7 +90,7 @@ bool TableModel::setData(const QModelIndex& index, const QVariant& value, int ro
     return false;
 }
 
-void TableModel::SetREFError(Cell* cell)
+void TableModel::SetREFError(std::shared_ptr<Cell>& cell)
 {
     for (auto ref : cell->getRefs())
     {
@@ -102,7 +102,7 @@ void TableModel::SetREFError(Cell* cell)
     }
 }
 
-void TableModel::UpdateCell(Cell* cell)
+void TableModel::UpdateCell(std::shared_ptr<Cell>& cell)
 {
     if (DetectLoop(cell))
         return;
@@ -118,7 +118,7 @@ void TableModel::UpdateCell(Cell* cell)
     }
 }
 
-QString TableModel::EvaluateExpression(QString expression, Cell* cell, bool isUpdate)
+QString TableModel::EvaluateExpression(QString expression, std::shared_ptr<Cell>& cell, bool isUpdate)
 {
     expression[0] = ' ';
 
@@ -151,7 +151,7 @@ QString TableModel::EvaluateExpression(QString expression, Cell* cell, bool isUp
     return result.value ? Cell::trueText : Cell::falseText;
 }
 
-bool TableModel::DetectLoop(Cell* cell)
+bool TableModel::DetectLoop(std::shared_ptr<Cell>& cell)
 {
     cell->visited = 1;
 
@@ -176,8 +176,30 @@ void TableModel::AddRow(QModelIndex index, int offset)
     if (index.row() == -1)
         offset = _rows + 1;
 
-    _gridData.insert(_gridData.begin() + (index.row() + offset), std::vector<Cell>(_columns));
+    std::vector<std::shared_ptr<Cell>> row;
+    for (int i = 0; i < _columns; i++)
+    {
+        row.push_back(std::shared_ptr<Cell>(new Cell()));
+    }
+    _gridData.insert(_gridData.begin() + (index.row() + offset), row);
+
     _rows++;
+
+    // Looking for all cells that under new row
+    for (int i = index.row() + offset + 1; i < _rows; i++)
+    {
+        for (int j = 0; j < _columns; j++)
+        {
+            for (auto& ref : _gridData[i][j]->getRefs())
+            {
+                auto expression = ref->getExpression();
+                auto letter = To26Base(j);
+                ref->setExpression(expression.replace(letter + QString::number(i), letter + QString::number(i + 1)));
+                UpdateCell(ref);
+            }
+        }
+    }
+
     Q_EMIT layoutChanged();
 }
 
@@ -186,10 +208,27 @@ void TableModel::AddColumn(QModelIndex index, int offset)
     if (index.column() == -1)
         offset = _columns + 1;
 
-    for (auto& row : _gridData)
-        row.insert(row.begin() + (index.column() + offset), Cell());
-
+    for (int i = 0; i < _rows; i++)
+    {
+        _gridData[i].insert(_gridData[i].begin() + (index.column() + offset), std::shared_ptr<Cell>(new Cell()));
+    }
     _columns++;
+
+    // Looking for all cells that right from new column
+    for (int i = 0; i < _rows; i++)
+    {
+        for (int j = index.column() + offset + 1; j < _columns; j++)
+        {
+            for (auto& ref : _gridData[i][j]->getRefs())
+            {
+                auto expression = ref->getExpression();
+                auto number = QString::number(i + 1);
+                ref->setExpression(expression.replace(To26Base(j - 1) + number, To26Base(j) + number));
+                UpdateCell(ref);
+            }
+        }
+    }
+
     Q_EMIT layoutChanged();
 }
 
@@ -198,8 +237,34 @@ void TableModel::DeleteRow(QModelIndex index)
     if (index.row() == -1 || _rows == 1)
         return;
 
+    for (int i = 0; i < _columns; i++)
+    {
+        for (auto& ref : _gridData[index.row()][i]->getRefs())
+        {
+            auto expression = ref->getExpression();
+            ref->setExpression(expression.replace(To26Base(i) + QString::number(index.row() + 1), "#REF!"));
+            UpdateCell(ref);
+        }
+    }
     _gridData.erase(_gridData.begin() + index.row());
+
     _rows--;
+
+    // Looking for all cells that under new row
+    for (int i = index.row(); i < _rows; i++)
+    {
+        for (int j = 0; j < _columns; j++)
+        {
+            for (auto& ref : _gridData[i][j]->getRefs())
+            {
+                auto expression = ref->getExpression();
+                auto letter = To26Base(j);
+                ref->setExpression(expression.replace(letter + QString::number(i + 2), letter + QString::number(i + 1)));
+                UpdateCell(ref);
+            }
+        }
+    }
+
     Q_EMIT layoutChanged();
 }
 
@@ -208,12 +273,34 @@ void TableModel::DeleteColumn(QModelIndex index)
     if (index.column() == -1 || _columns == 1)
         return;
 
-    for (auto& row : _gridData)
+    for (int i = 0; i < _rows; i++)
     {
-        row.erase(row.begin() + index.column());
+        for (auto& ref : _gridData[i][index.column()]->getRefs())
+        {
+            auto expression = ref->getExpression();
+            ref->setExpression(expression.replace(To26Base(index.column()) + QString::number(i + 1), "#REF!"));
+            UpdateCell(ref);
+        }
+        _gridData[i].erase(_gridData[i].begin() + index.column());
     }
 
     _columns--;
+
+    // Looking for all cells that right from new column
+    for (int i = 0; i < _rows; i++)
+    {
+        for (int j = index.column(); j < _columns; j++)
+        {
+            for (auto& ref : _gridData[i][j]->getRefs())
+            {
+                auto expression = ref->getExpression();
+                auto number = QString::number(i + 1);
+                ref->setExpression(expression.replace(To26Base(j + 1) + number, To26Base(j) + number));
+                UpdateCell(ref);
+            }
+        }
+    }
+
     Q_EMIT layoutChanged();
 }
 
@@ -229,8 +316,8 @@ void TableModel::Serialize(QTextStream& out)
         if (i != 0) out << "\n";
         for (auto& cell : _gridData[i])
         {
-            if (!cell.getExpression().isEmpty())
-                out << cell.getExpression();
+            if (!cell->getExpression().isEmpty())
+                out << cell->getExpression();
             out << ",";
         }
     }
@@ -243,7 +330,7 @@ void TableModel::Deserialize(QTextStream& in)
 
     while(!in.atEnd())
     {
-        std::vector<Cell> data;
+        std::vector<std::shared_ptr<Cell>> data;
 
         int columnIndex = 0;
         int delimiterIndex = -1;
@@ -259,14 +346,14 @@ void TableModel::Deserialize(QTextStream& in)
                 {
                     delimiterIndex = i;
                     columnIndex++;
-                    data.push_back(Cell());
+                    data.push_back(std::shared_ptr<Cell>(new Cell()));
                     continue;
                 }
 
                 QString expression = row.mid(delimiterIndex + 1, i - delimiterIndex - 1);
 
                 // Cell only with expression
-                data.push_back(Cell(expression, ""));
+                data.push_back(std::shared_ptr<Cell>(new Cell(expression, "")));
 
                 delimiterIndex = i;
                 columnIndex++;
@@ -285,8 +372,8 @@ void TableModel::Deserialize(QTextStream& in)
         for (auto& cell : row)
         {
             j++;
-            if (cell.getExpression() == nullptr) continue;
-            setData(createIndex(i, j), cell.getExpression());
+            if (cell->getExpression() == nullptr) continue;
+            setData(createIndex(i, j), cell->getExpression());
         }
     }
 
@@ -306,9 +393,20 @@ QString TableModel::To26Base(int index) const
 
 void TableModel::SetDefault()
 {
+    _gridData.clear();
     _rows = defaultRows;
     _columns = defaultColumns;
-    _gridData = std::vector(_rows, std::vector<Cell>(_columns));
+
+    for (int i = 0; i < _rows; i++)
+    {
+        std::vector<std::shared_ptr<Cell>> row;
+        for (int j = 0; j < _columns; j++)
+        {
+            row.push_back(std::shared_ptr<Cell>(new Cell()));
+        }
+        _gridData.push_back(row);
+    }
+
     Q_EMIT dataChanged(createIndex(0, 0), createIndex(_rows - 1, _columns - 1));
     Q_EMIT layoutChanged();
 }

@@ -25,10 +25,10 @@ private:
     Qt::ItemFlags flags(const QModelIndex& index) const override;
 
     QString To26Base(int index) const;
-    QString EvaluateExpression(QString expression, Cell* cell, bool isUpdate);
-    void UpdateCell(Cell* cell);
-    void SetREFError(Cell* cell);
-    bool DetectLoop(Cell* cell);
+    QString EvaluateExpression(QString expression, std::shared_ptr<Cell>& cell, bool isUpdate);
+    void UpdateCell(std::shared_ptr<Cell>& cell);
+    void SetREFError(std::shared_ptr<Cell>& cell);
+    bool DetectLoop(std::shared_ptr<Cell>& cell);
 
 public Q_SLOTS:
     void SetDefault();
@@ -44,5 +44,5 @@ Q_SIGNALS:
 private:
     const int defaultRows = 10, defaultColumns = 10;
     int _rows, _columns;
-    std::vector<std::vector<Cell>> _gridData;
+    std::vector<std::vector<std::shared_ptr<Cell>>> _gridData;
 };

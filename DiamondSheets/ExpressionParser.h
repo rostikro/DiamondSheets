@@ -5,12 +5,12 @@
 
 class ExpressionParser : public DiamondSheetsBaseVisitor
 {
-	std::vector<std::vector<Cell>>* _gridData;
-	Cell* headCell;
+	std::vector<std::vector<std::shared_ptr<Cell>>>* _gridData; // TODO: shared_ptr
+	std::shared_ptr<Cell> headCell;
 	bool isUpdate;
 
 public:
-	ExpressionParser(std::vector<std::vector<Cell>>* gridData, Cell* cell, bool isUpdate)
+	ExpressionParser(std::vector<std::vector<std::shared_ptr<Cell>>>* gridData, std::shared_ptr<Cell> cell, bool isUpdate)
 		: _gridData(gridData), headCell(cell), isUpdate(isUpdate) { }
 
 private:
