@@ -168,7 +168,7 @@ std::any ExpressionParser::visitCellIdAtomExp(DiamondSheetsParser::CellIdAtomExp
 	QString value = _gridData->operator[](cellId[0])[cellId[1]].getValue();
 
 	// If we are not updating cell, than we need to add refs
-	if (!isUpdate)
+	if (!isUpdate && !headCell->isReferenced(&_gridData->operator[](cellId[0])[cellId[1]]))
 	{
 		_gridData->operator[](cellId[0])[cellId[1]].addRef(headCell);
 		headCell->addReferenced(&_gridData->operator[](cellId[0])[cellId[1]]);

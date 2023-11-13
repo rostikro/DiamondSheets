@@ -27,6 +27,7 @@ public:
     void addReferenced(Cell* cell) { referenced.push_back(cell); }
     std::vector<Cell*> getReferenced() { return referenced; }
     void clearReferenced() { referenced.clear(); }
+    bool isReferenced(Cell* cell) { return std::find(referenced.begin(), referenced.end(), cell) != referenced.end(); }
 
 public:
     bool visited = false;

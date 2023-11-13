@@ -68,7 +68,7 @@ bool TableModel::setData(const QModelIndex& index, const QVariant& value, int ro
             if (value.toString()[0] == '=')
                 _gridData[index.row()][index.column()].setValue(EvaluateExpression(value.toString(), &_gridData[index.row()][index.column()], false));
 
-        
+
         if (DetectLoop(&_gridData[index.row()][index.column()]))
         {
             _gridData[index.row()][index.column()].setValue(Cell::refErrorText);
